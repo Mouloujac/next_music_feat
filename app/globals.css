@@ -17,11 +17,31 @@
 }
 
 body {
+  width: 100vw;
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  display: flex;
+  text-align: center;
+  justify-content: center;
+}
+
+input{
+  border: 1px solid blue;
+  border-radius:0.2rem ;
+  padding: 0.3rem;
+}
+
+.card{
+  background-color: rgb(196, 194, 194);
+  display: flex;
+  padding: 0.3rem;
+  margin: 0.6rem;
+  
+}
+
+.trackName{
+  color: white;
+}
+
+.albumImage{
+  width: 80px;
 }
