@@ -12,7 +12,7 @@ export default function Input(props : any){
                 onKeyUp={event => {
                     if (event.key == "Enter") {
                         console.log('Pressed enter');
-                        
+                        props.search()
                     }
                 }}
                 onChange={event => props.setSearchInput(event.target.value)}

@@ -30,13 +30,7 @@ input{
   padding: 0.3rem;
 }
 
-.card{
-  background-color: rgb(196, 194, 194);
-  display: flex;
-  padding: 0.3rem;
-  margin: 0.6rem;
-  
-}
+
 
 .trackName{
   color: white;
@@ -44,4 +38,20 @@ input{
 
 .albumImage{
   width: 80px;
+}
+
+li{
+  background-color: dimgray;
+  margin: 0.3rem;
+  padding: 0.3rem;
+}
+
+.card{
+  display: flex;
+
+  
+}
+
+.card div{
+  width: 100%;
 }
