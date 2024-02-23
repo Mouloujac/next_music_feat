@@ -1,29 +1,38 @@
-"use client";
-
+"use client"
 import { useState, useEffect } from "react";
 
-export default function Input(props : any){
-    
+export default function Input(props: any) {
+    useEffect(() => {
+        if (props.searchInput) {
+            props.optionSearch();
+        }
+    }, [props.searchInput]);
+
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Empêcher le rechargement de la page
+            props.search();
+        }
+    };
+
     return (
         <>
-            <input 
+            <input
                 placeholder="Research"
-                type="input"
-                onKeyUp={event => {
-                    if (event.key == "Enter") {
-                        console.log('Pressed enter');
-                        props.search()
-                    }
+                type="text"
+                list="artists"
+                onKeyPress={handleKeyPress}
+                onChange={(event) => {
+                    props.setSearchInput(event.target.value);
+                    
                 }}
-                onChange={event => props.setSearchInput(event.target.value)}
-                >
-           </input>
-        <button
-            onClick={event => {
-                console.log('Bouton cliqué !')
-                props.search()
-        }}
-        >Search</button>
+            />
+            <datalist id="artists">
+                {props.artistsName.map((artist: string, index: number) => (
+                    <option key={index} value={artist} />
+                ))}
+            </datalist>
+            <button onClick={props.search}>Search</button>
         </>
-    )
+    );
 }
