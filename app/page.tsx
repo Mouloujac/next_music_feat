@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Input from "./components/input";
 import Card from "./components/Card";
-
+import AudioPlayer from "./components/AudioPlayer";
 import config from "../config";
 
 export default function Home() {
@@ -18,6 +18,9 @@ export default function Home() {
   const [featName, setFeatName] = useState<string[]>([]);
   const [featID, setFeatID] = useState<string[]>([]);
   const [tracksFeat, setTracksFeat] = useState<any[]>([]);
+
+
+  
   const listFeat = tracksFeat.map((feat: any, index: number) => (
     <li key={index}>
       <div className="card">
@@ -29,10 +32,9 @@ export default function Home() {
           {feat.artists.map((artiste: any, index: number) => (
             <a key={index}>{artiste.name}, </a>
           ))}
+          <AudioPlayer previewUrl={feat.previewUrl} id={feat.id} />
         </div>
-        <figure>
-          <audio controls src={feat.previewUrl}></audio>
-        </figure>
+        
       </div>
     </li>
   ));
