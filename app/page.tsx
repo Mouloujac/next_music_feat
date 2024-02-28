@@ -18,7 +18,7 @@ export default function Home() {
   const [featName, setFeatName] = useState<string[]>([]);
   const [featID, setFeatID] = useState<string[]>([]);
   const [tracksFeat, setTracksFeat] = useState<any[]>([]);
-
+  const [groupedArray, setGroupedArray] = useState([]);
 
   
   const listFeat = tracksFeat.map((feat: any, index: number) => (
@@ -85,6 +85,9 @@ export default function Home() {
       });
   }
 
+  function impr(){
+    console.log(tracksFeat)
+  }
 
   async function optionSearch() {
     console.log("search: " + searchInput);
@@ -122,26 +125,21 @@ export default function Home() {
           Authorization: "Bearer " + accessToken,
         },
       };
-      var includeGroups = "album,single,appears_on";
-      // Il faut faire un appel a "Tracks" et garder que ceux ou "items[0].artists.map(artist => artist.name)" egal a la recherche dans un premier temp
-      var artistAlbums = fetch(
-        `https://api.spotify.com/v1/artists/${artistsNameId}/albums?include_groups=appears_on&offset=0&limit=10&market=FR`,
-        artistParameters
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          // const nomsArtistes = data.tracks.items[0].artists.map((artist: { name: any; }) => artist.name);
-          // setArtistsName(nomsArtistes);
-          // const nomsTracks = data.tracks.items[0].name;
-          // setTrackName(nomsTracks);
-          // const urlImage = data.tracks.items[0].album.images[0].url;
-          // setAlbumImg(urlImage);
-
-          setFeatName(data.items.map((item: { name: any }) => item.name));
-          setFeatID(data.items.map((item: { id: any }) => item.id));
-        });
+  
+      const fetchAlbums = async (url: string) => {
+        const response = await fetch(url, artistParameters);
+        const data = await response.json();
+        setFeatName((prevFeatName) => [...prevFeatName, ...data.items.map((item: { name: any }) => item.name)]);
+        setFeatID((prevFeatID) => [...prevFeatID, ...data.items.map((item: { id: any }) => item.id)]);
+        if (data.next) {
+          await fetchAlbums(data.next);
+        }
+      };
+  
+      fetchAlbums(`https://api.spotify.com/v1/artists/${artistsNameId}/albums?include_groups=appears_on&offset=0&limit=30&market=FR`);
     }
   }, [artistsNameId]);
+  
 
   useEffect(() => {
     if (featID) {
@@ -177,7 +175,7 @@ export default function Home() {
                       ...tracksFeat,
                       updatedTrack,
                     ]);
-                    console.log(data);
+                    tracksFeat.sort()
                   }
                 });
               }
@@ -185,6 +183,7 @@ export default function Home() {
           });
       });
     }
+   
   }, [featID]);
 
   return (
@@ -193,6 +192,7 @@ export default function Home() {
       <Input search={search} searchInput={searchInput} setSearchInput={setSearchInput} artistsName={artistsName} optionSearch={optionSearch}/>
 
       <ul>{listFeat}</ul>
+      <button onClick={impr}>Click</button>
     </main>
   );
 }
