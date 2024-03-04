@@ -22,6 +22,7 @@ body {
   display: flex;
   text-align: center;
   justify-content: center;
+  background-color: rgb(87, 87, 87);
 }
 
 input{
@@ -35,8 +36,8 @@ input{
   color: white;
 }
 
-.albumImage{
-  width: 80px;
+.albumDiv:hover .playButton{
+  opacity: 1;
 }
 
 li{
@@ -45,23 +46,8 @@ li{
   padding: 0.3rem;
 }
 
-.card{
-  display: flex;
-  width: 500px;
-  
-}
 
-.card div{
-  width: 100%;
-}
 
-.playIcon{
-  width: 20px;
-}
-
-.pauseIcon{
-  width: 20px;
-}
 
 /********** Range Input Styles **********/
 /*Range Reset*/

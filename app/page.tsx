@@ -5,39 +5,21 @@ import Input from "./components/input";
 import Card from "./components/Card";
 import AudioPlayer from "./components/AudioPlayer";
 import config from "../config";
+import axios from 'axios';
 
 export default function Home() {
   const CLIENT_ID: string = config.spotify.clientId;
   const CLIENT_SECRET: string = config.spotify.clientSecret;
   const [accessToken, setAccessToken] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
-  const [artistsName, setArtistsName] = useState<string[]>([]);
+  const [artistsName, setArtistsName] = useState<string>("");
   const [artistsNameId, setArtistsNameId] = useState<string>("");
   const [trackName, setTrackName] = useState<string[]>([]);
   const [albumImg, setAlbumImg] = useState<string>("");
   const [featName, setFeatName] = useState<string[]>([]);
   const [featID, setFeatID] = useState<string[]>([]);
   const [tracksFeat, setTracksFeat] = useState<any[]>([]);
-  const [groupedArray, setGroupedArray] = useState([]);
-
   
-  const listFeat = tracksFeat.map((feat: any, index: number) => (
-    <li key={index}>
-      <div className="card">
-        <img className="albumImage" src={feat.imageUrl}></img>
-        <div>
-          <div className="trackName">
-            <p>{feat.name}</p>
-          </div>
-          {feat.artists.map((artiste: any, index: number) => (
-            <a key={index}>{artiste.name}, </a>
-          ))}
-          <AudioPlayer previewUrl={feat.previewUrl} id={feat.id} />
-        </div>
-        
-      </div>
-    </li>
-  ));
 
   useEffect(() => {
     var authParameters: any = {
@@ -74,125 +56,111 @@ export default function Home() {
     )
       .then((response) => response.json())
       .then((data) => {
-        // const nomsArtistes = data.tracks.items[0].artists.map((artist: { name: any; }) => artist.name);
-        // setArtistsName(nomsArtistes);
-        // const nomsTracks = data.tracks.items[0].name;
-        // setTrackName(nomsTracks);
-        // const urlImage = data.tracks.items[0].album.images[0].url;
-        // setAlbumImg(urlImage);
-        console.log(data.artists.items[0].id);
+        
         setArtistsNameId(data.artists.items[0].id);
+        setArtistsName(searchInput)
+        searchArtist(searchInput, data.artists.items[0].id)
       });
   }
 
-  function impr(){
+
+
+
+
+ async function searchArtist(name: string, ID: string) { 
+    console.log("searchArtist: " + name);
+    console.log("searchArtistId: " + ID);
+   
+   
+    setTracksFeat([]);
+
+    const baseUrl = "https://api.spotify.com/v1/search?q="
+    const limit = 50; // Nombre de résultats par page
+    const type = "track";
+    const query = name;
+    let offset = 0;
+    let allTracks: any[] = []; // Stockage de toutes les pistes récupérées
+
+    // Effectuer une première requête pour obtenir le nombre total de résultats
+    while (true) {
+        try {
+            const url = `${baseUrl}${query}&type=${type}&limit=${limit}&offset=${offset}`;
+
+            const config = {
+                method: "GET",
+                url: url,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + accessToken,
+                },
+            };
+
+            const response = await axios(config);
+
+            if (response.status === 200) {
+                const tracks = response.data.tracks.items;
+              
+                // Filtrer les pistes pour celles qui ont un artiste avec l'ID spécifié
+                
+
+                const filteredTracks = tracks.filter((track: { artists: { id: string; }[]; }) => {
+                  return track.artists.some(artist => artist.id === ID);
+                });
+                const finalTracks = filteredTracks.filter((track)=>{
+                  if(track.artists.length >= 2){
+                    return track
+                  }
+                })
+
+              
+                
+              
+              
+              
+                              // Ajouter les pistes filtrées à la liste de toutes les pistes
+                allTracks.push(...finalTracks);
+                
+                // Si le nombre de pistes récupérées est inférieur au nombre de pistes limitées par la recherche,
+                // cela signifie qu'il n'y a plus de pistes à récupérer
+                if (tracks.length < limit) {
+                    break;
+                }
+                
+                // Augmenter l'offset pour récupérer la prochaine page de résultats
+                offset += limit;
+            }
+        } catch (error) {
+            console.error("Erreur lors de l'appel à l'API:", error);
+            break;
+        }
+    }
+    // Une fois que toutes les pistes ont été récupérées et filtrées, vous pouvez les stocker dans un state ou une variable
+    setTracksFeat(allTracks);
+    console.log(allTracks)
+}
+
+
+
+
+
+
+
+
+
+
+
+  async function impr(){
     console.log(tracksFeat)
   }
-
-  async function optionSearch() {
-    console.log("search: " + searchInput);
-    var artistParameters: any = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + accessToken,
-      },
-    };
-    var artistID = await fetch(
-      "https://api.spotify.com/v1/search?q=" + searchInput + "&type=artist",
-      artistParameters
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        // const nomsArtistes = data.tracks.items[0].artists.map((artist: { name: any; }) => artist.name);
-        // setArtistsName(nomsArtistes);
-        // const nomsTracks = data.tracks.items[0].name;
-        // setTrackName(nomsTracks);
-        // const urlImage = data.tracks.items[0].album.images[0].url;
-        // setAlbumImg(urlImage);
-        const names = data.artists.items.map((artist: any) => artist.name);
-        setArtistsName(names);
-      });
-  }
-
-
-  useEffect(() => {
-    if (artistsNameId) {
-      var artistParameters: any = {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + accessToken,
-        },
-      };
-  
-      const fetchAlbums = async (url: string) => {
-        const response = await fetch(url, artistParameters);
-        const data = await response.json();
-        setFeatName((prevFeatName) => [...prevFeatName, ...data.items.map((item: { name: any }) => item.name)]);
-        setFeatID((prevFeatID) => [...prevFeatID, ...data.items.map((item: { id: any }) => item.id)]);
-        if (data.next) {
-          await fetchAlbums(data.next);
-        }
-      };
-  
-      fetchAlbums(`https://api.spotify.com/v1/artists/${artistsNameId}/albums?include_groups=appears_on&offset=0&limit=30&market=FR`);
-    }
-  }, [artistsNameId]);
   
 
-  useEffect(() => {
-    if (featID) {
-      var artistParameters: any = {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + accessToken,
-        },
-      };
-      featID.forEach((feat) => {
-        var artistFeat = fetch(
-          `https://api.spotify.com/v1/albums/${feat}`,
-          artistParameters
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            let tracksBy = [];
-
-            data.tracks.items.forEach(
-              (track: {
-                preview_url: any; artists: any[]; name: any 
-}) => {
-                track.artists.forEach((artist) => {
-                  if (artist.name == searchInput) {
-                    const updatedTrack = {
-                      ...track,
-                      imageUrl: data.images[0].url,
-                      previewUrl: track.preview_url,
-                    };
-                    //data.tracks.items where name =  Mettre à jour l'état tracksFeat en ajoutant le nouvel objet de piste
-                    setTracksFeat((tracksFeat) => [
-                      ...tracksFeat,
-                      updatedTrack,
-                    ]);
-                    tracksFeat.sort()
-                  }
-                });
-              }
-            );
-          });
-      });
-    }
-   
-  }, [featID]);
 
   return (
     <main className="">
       <h1>MUSIC FEAT</h1>
-      <Input search={search} searchInput={searchInput} setSearchInput={setSearchInput} artistsName={artistsName} optionSearch={optionSearch}/>
-
-      <ul>{listFeat}</ul>
-      <button onClick={impr}>Click</button>
+      <button onClick={impr}>Fait voar</button>
+      <Input search={search} searchInput={searchInput} setSearchInput={setSearchInput} artistsName={artistsName} />
+      <Card />
     </main>
   );
 }

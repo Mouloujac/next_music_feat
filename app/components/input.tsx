@@ -2,12 +2,7 @@
 import { useState, useEffect } from "react";
 
 export default function Input(props: any) {
-    useEffect(() => {
-        if (props.searchInput) {
-            props.optionSearch();
-        }
-    }, [props.searchInput]);
-
+ 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === "Enter") {
             event.preventDefault(); // Empêcher le rechargement de la page
@@ -27,11 +22,7 @@ export default function Input(props: any) {
                     
                 }}
             />
-            <datalist id="artists">
-                {props.artistsName.map((artist: string, index: number) => (
-                    <option key={index} value={artist} />
-                ))}
-            </datalist>
+           
             <button onClick={props.search}>Search</button>
         </>
     );
