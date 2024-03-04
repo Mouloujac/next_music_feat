@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Input from "./components/input";
 import Card from "./components/Card";
+import Section from "./components/section";
 import AudioPlayer from "./components/AudioPlayer";
 import config from "../config";
 import axios from 'axios';
@@ -154,14 +155,18 @@ export default function Home() {
     console.log(tracksFeat)
   }
   
-
-
+  
   return (
     <main className="">
       <h1>MUSIC FEAT</h1>
       <button onClick={impr}>Fait voar</button>
       <Input search={search} searchInput={searchInput} setSearchInput={setSearchInput} artistsName={artistsName} />
-      <Card />
+      {Object.keys(tracksFeat).map((artistName, id) => (
+        <div key={id}>
+          
+          <Section tracks={tracksFeat[artistName]} artist={artistName}/>
+        </div>
+      ))}
     </main>
   );
 }
