@@ -67,10 +67,9 @@ export default function Home() {
 
 
 
- async function searchArtist(name: string, ID: string) { 
+  async function searchArtist(name: string, ID: string) { 
     console.log("searchArtist: " + name);
     console.log("searchArtistId: " + ID);
-   
    
     setTracksFeat([]);
 
@@ -79,7 +78,7 @@ export default function Home() {
     const type = "track";
     const query = name;
     let offset = 0;
-    let allTracks: any[] = []; // Stockage de toutes les pistes récupérées
+    let allTracks: { [artistName: string]: any[] } = {}; // Stockage de toutes les pistes organisées par artiste
 
     // Effectuer une première requête pour obtenir le nombre total de résultats
     while (true) {
@@ -101,24 +100,22 @@ export default function Home() {
                 const tracks = response.data.tracks.items;
               
                 // Filtrer les pistes pour celles qui ont un artiste avec l'ID spécifié
-                
-
                 const filteredTracks = tracks.filter((track: { artists: { id: string; }[]; }) => {
                   return track.artists.some(artist => artist.id === ID);
                 });
-                const finalTracks = filteredTracks.filter((track)=>{
-                  if(track.artists.length >= 2){
-                    return track
-                  }
-                })
-
               
-                
-              
-              
-              
-                              // Ajouter les pistes filtrées à la liste de toutes les pistes
-                allTracks.push(...finalTracks);
+                // Organiser les morceaux par artiste, en évitant de créer une entrée pour searchInput
+                for (const track of filteredTracks) {
+                    for (const artist of track.artists) {
+                        const artistName = artist.name;
+                        if (artistName !== name) { // Vérifie si le nom de l'artiste n'est pas égal à searchInput
+                            if (!allTracks[artistName]) {
+                                allTracks[artistName] = [];
+                            }
+                            allTracks[artistName].push(track);
+                        }
+                    }
+                }
                 
                 // Si le nombre de pistes récupérées est inférieur au nombre de pistes limitées par la recherche,
                 // cela signifie qu'il n'y a plus de pistes à récupérer
@@ -134,10 +131,14 @@ export default function Home() {
             break;
         }
     }
-    // Une fois que toutes les pistes ont été récupérées et filtrées, vous pouvez les stocker dans un state ou une variable
+    // Une fois que toutes les pistes ont été récupérées et organisées par artiste, vous pouvez les stocker dans un state ou une variable
     setTracksFeat(allTracks);
     console.log(allTracks)
 }
+
+
+
+
 
 
 
