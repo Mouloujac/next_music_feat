@@ -22,7 +22,8 @@ body {
   display: flex;
   text-align: center;
   justify-content: center;
-  background-color: rgb(87, 87, 87);
+  background-color: #f8fafc;
+  
 }
 
 input{
@@ -44,6 +45,14 @@ li{
   background-color: dimgray;
   margin: 0.3rem;
   padding: 0.3rem;
+}
+
+.sectionTracks {
+  transition: height 0.3s ease;
+}
+
+.expanded {
+  height: auto;
 }
 
 

@@ -38,20 +38,14 @@ const AudioPlayer = ({ previewUrl }) => {
   };
 
   return (
-    <div>
-      <button onClick={togglePlay}>
+    <div className="playButton absolute opacity-0 hover:opacity-1 z-50 transition-all">
+      <button onClick={togglePlay} className="">
         {isPlaying ? (
-          <img src="/pause.svg" alt="Pause" className="pauseIcon"/>
+          <img src="/pause.svg" alt="Pause" className="pauseIcon w-14 absolute transition-all"/>
         ) : (
-          <img src="/play.svg" alt="Play" className="playIcon"/>
+          <img src="/play.svg" alt="Play" className="playIcon w-14 absolute transition-all"/>
         )}
       </button>
-      <input
-        type="range"
-        value={currentTime}
-        max={duration}
-        onChange={handleSeek}
-      />
     </div>
   );
 };

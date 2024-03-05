@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Input from "./components/input";
 import Card from "./components/Card";
-import Section from "./components/section";
+import Section from "./components/Section";
 import AudioPlayer from "./components/AudioPlayer";
 import config from "../config";
 import axios from 'axios';
@@ -20,6 +20,10 @@ export default function Home() {
   const [featName, setFeatName] = useState<string[]>([]);
   const [featID, setFeatID] = useState<string[]>([]);
   const [tracksFeat, setTracksFeat] = useState<any[]>([]);
+  const [musicUrl, setMusicUrl] = useState<string>(""); 
+  const [audioUrl, setAudioUrl] = useState(""); // État pour stocker l'URL de la piste audio
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [artistsOption, setArtistsOption] = useState<any[]>([])
   
 
   useEffect(() => {
@@ -40,7 +44,7 @@ export default function Home() {
   }, []);
 
   async function search() {
-    console.log("search: " + searchInput);
+    
    
     setTracksFeat([])
 
@@ -65,25 +69,19 @@ export default function Home() {
   }
 
 
-
-
-
   async function searchArtist(name: string, ID: string) { 
-    console.log("searchArtist: " + name);
-    console.log("searchArtistId: " + ID);
    
     setTracksFeat([]);
 
-    const baseUrl = "https://api.spotify.com/v1/search?q="
+    const baseUrl = "https://api.spotify.com/v1/search?q=";
     const limit = 50; // Nombre de résultats par page
     const type = "track";
     const query = name;
-    let offset = 0;
     let allTracks: { [artistName: string]: any[] } = {}; // Stockage de toutes les pistes organisées par artiste
 
-    // Effectuer une première requête pour obtenir le nombre total de résultats
-    while (true) {
-        try {
+    try {
+        // Effectuer des requêtes pour récupérer toutes les pistes en tranches de 50 jusqu'à 950
+        for (let offset = 0; offset < 950; offset += limit) {
             const url = `${baseUrl}${query}&type=${type}&limit=${limit}&offset=${offset}`;
 
             const config = {
@@ -117,56 +115,97 @@ export default function Home() {
                         }
                     }
                 }
-                
-                // Si le nombre de pistes récupérées est inférieur au nombre de pistes limitées par la recherche,
-                // cela signifie qu'il n'y a plus de pistes à récupérer
-                if (tracks.length < limit) {
-                    break;
-                }
-                
-                // Augmenter l'offset pour récupérer la prochaine page de résultats
-                offset += limit;
             }
-        } catch (error) {
-            console.error("Erreur lors de l'appel à l'API:", error);
-            break;
         }
+    } catch (error) {
+        console.error("Erreur lors de l'appel à l'API:", error);
     }
-    // Une fois que toutes les pistes ont été récupérées et organisées par artiste, vous pouvez les stocker dans un state ou une variable
+
+    // Stocker toutes les pistes récupérées et organisées par artiste
     setTracksFeat(allTracks);
-    console.log(allTracks)
+   
 }
 
 
+async function searchArtistsOption() {
+  try {
+      const response = await axios.get(`https://api.spotify.com/v1/search?q=${searchInput}&type=artist&limit=8`, {
+          headers: {
+              "Authorization": `Bearer ${accessToken}`
+          }
+      });
 
-
-
-
-
-
-
-
-
-
-
-
-
-  async function impr(){
-    console.log(tracksFeat)
+      if (response.status === 200) {
+          const artists = response.data.artists.items.filter(artist => !artist.name.includes(',')); // Filtrer les noms d'artistes
+          setArtistsOption(artists);
+          console.log(artists)
+      } else {
+          console.error("Erreur lors de la recherche des artistes:", response.statusText);
+      }
+  } catch (error) {
+      console.error("Erreur lors de la recherche des artistes:", error);
   }
-  
+}
+
+
   
   return (
-    <main className="">
-      <h1>MUSIC FEAT</h1>
-      <button onClick={impr}>Fait voar</button>
-      <Input search={search} searchInput={searchInput} setSearchInput={setSearchInput} artistsName={artistsName} />
+    <main className="w-full flex flex-col ">
+      
+      
+      <Input search={search} searchArtistsOption={searchArtistsOption} searchInput={searchInput} setSearchInput={setSearchInput} artistsName={artistsName} />
+      {/* {artistsOption.length > 0 && (
+    <datalist id="artists">
+    {artistsOption.map((artist, index) => (
+        <React.Fragment key={index}>
+            <option value={artist.name}>{artist.name}</option>
+            {artist.images.length > 0 ? (
+                <img src={artist.images[0].url} alt={artist.name} />
+            ) : (
+                <img src="avatarImg.png" alt="Avatar" />
+            )}
+        </React.Fragment>
+    ))}
+    </datalist>
+
+    )} */}
+    {artistsOption.length > 0 && (
+      <div className="w-full flex">
+    {artistsOption.map((artist, index) => (
+        <div key={index} className="m-auto">
+            
+            {artist.images.length > 0 ? (
+    <div className="relative text-center px-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden mx-auto">
+            <img className="w-full h-full object-cover" src={artist.images[0].url} alt={artist.name} />
+        </div>
+        <div className="mt-1">{artist.name}</div>
+    </div>
+) : (
+    <div className="relative text-center px-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden mx-auto">
+            <img className="w-full h-full object-cover" src="avatarImg.png" alt="Avatar" />
+        </div>
+        <div className="mt-1">{artist.name}</div>
+    </div>
+)}
+
+        </div>
+    ))}
+    </div>
+    )} 
       {Object.keys(tracksFeat).map((artistName, id) => (
         <div key={id}>
           
-          <Section tracks={tracksFeat[artistName]} artist={artistName}/>
+          <Section setIsPlaying={setIsPlaying} tracks={tracksFeat[artistName]} isPlaying={isPlaying} setMusicUrl={setMusicUrl} artist={artistName} setAudioUrl={setAudioUrl}/>
         </div>
       ))}
+      {isPlaying && (
+        <audio controls autoPlay key={audioUrl} className="sticky bottom-0 w-full bg-slate-50 z-50">
+          <source  src={audioUrl} type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+      )}
     </main>
   );
 }
