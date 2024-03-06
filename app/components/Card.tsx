@@ -9,7 +9,7 @@ export default function Card ({ track, setMusicUrl, setAudioUrl, setIsPlaying, i
         
         setAudioUrl(track.preview_url); // Met à jour l'URL de la piste audio
         setIsPlaying(true); // Démarre la lecture
-        console.log(track.name)
+        
     };
 
     

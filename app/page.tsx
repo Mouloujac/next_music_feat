@@ -57,9 +57,93 @@ export default function Home() {
       .then((data) => {
         setArtistsNameId(data.artists.items[0].id);
         setArtistsName(searchInput);
-        searchArtist(searchInput, data.artists.items[0].id);
+        searchAlbum(data.artists.items[0].id)
+        // searchArtist(searchInput, data.artists.items[0].id);
       });
   }
+
+
+
+
+async function searchAlbum(ID: any) {
+  try {
+    let offset = 0;
+    let allAlbumIds: any[] = [];
+    let total;
+
+    do {
+      const response = await axios.get(
+        `https://api.spotify.com/v1/artists/${ID}/albums?include_groups=single,album,appears_on,compilation&limit=50&offset=${offset}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + accessToken,
+          },
+        }
+      );
+      
+      const albumIds = response.data.items.map(album => album.id);
+      allAlbumIds = allAlbumIds.concat(albumIds);
+      offset += 50;
+      total = response.data.total;
+
+    } while (offset < total);
+
+    searchAlbumTracks(allAlbumIds)
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+async function searchAlbumTracks(albumList: any) {
+  try {
+    let offset = 0;
+    let allAlbums: any[] = [];
+    let allTracks: any[] = [];
+    let total = albumList.length;
+    let searchTracks = albumList.slice(offset, 20);
+    
+    do {
+      const response = await axios.get(
+        `https://api.spotify.com/v1/albums?ids=${searchTracks}&limit=20&offset=${offset}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + accessToken,
+          },
+        }
+      );
+      
+      const albums = response.data.albums;
+      const filteredTracks = albums.flatMap((album: any) => album.tracks.items.filter((track: any) => {
+        // Filtrer les pistes qui correspondent à votre condition
+        if (track.artists.length > 1) {
+          return true; // Conserver les pistes avec plus d'un artiste
+        } else {
+          // Vérifier si l'ID de l'artiste correspond à artistsNameId
+          return track.artists.some((artist: any) => artist.id === artistsNameId);
+        }
+      }));
+
+      allTracks.push(...filteredTracks);
+      
+      offset += 20;
+      
+
+    } while (offset < total);
+
+    
+    
+    console.log(allTracks.map(track => track.name))
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+
 
   async function searchArtist(name: string, ID: string) {
     setTracksFeat([]);
@@ -135,7 +219,6 @@ export default function Home() {
           (artist) => !artist.name.includes(",")
         ); // Filtrer les noms d'artistes
         setArtistsOption(artists);
-        console.log(artists);
       } else {
         console.error(
           "Erreur lors de la recherche des artistes:",
@@ -156,24 +239,10 @@ export default function Home() {
         setSearchInput={setSearchInput}
         artistsName={artistsName}
       />
+     
       {/* {artistsOption.length > 0 && (
-    <datalist id="artists">
-    {artistsOption.map((artist, index) => (
-        <React.Fragment key={index}>
-            <option value={artist.name}>{artist.name}</option>
-            {artist.images.length > 0 ? (
-                <img src={artist.images[0].url} alt={artist.name} />
-            ) : (
-                <img src="avatarImg.png" alt="Avatar" />
-            )}
-        </React.Fragment>
-    ))}
-    </datalist>
-
-    )} */}
-      {artistsOption.length > 0 && (
         <ArtistSelection artistsOption={artistsOption} setSearchInput={setSearchInput} search={search}/>
-      )}
+      )} */}
       {Object.keys(tracksFeat).map((artistName, id) => (
         <div key={id}>
           <Section
