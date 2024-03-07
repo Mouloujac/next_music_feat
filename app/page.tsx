@@ -21,6 +21,8 @@ export default function Home() {
   const [audioUrl, setAudioUrl] = useState(""); // État pour stocker l'URL de la piste audio
   const [isPlaying, setIsPlaying] = useState(false);
   const [artistsOption, setArtistsOption] = useState<any[]>([]);
+  const [allTracksByArtist, setAllTracksByArtist] = useState<{ [artistName: string]: any[] }>({});
+
 
   useEffect(() => {
     var authParameters: any = {
@@ -89,7 +91,7 @@ async function searchAlbum(ID: any) {
 
     } while (offset < total);
 
-    searchAlbumTracks(allAlbumIds)
+    searchAlbumTracks(allAlbumIds, ID)
 
   } catch (error) {
     console.error(error);
@@ -97,17 +99,21 @@ async function searchAlbum(ID: any) {
 }
 
 
-async function searchAlbumTracks(albumList: any) {
+async function searchAlbumTracks(albumList: any, ID: any) {
   try {
     let offset = 0;
-    let allAlbums: any[] = [];
-    let allTracks: any[] = [];
+    let tracks: any[] = [];
+    let allTracks: { [artistName: string]: any[] } = {};
     let total = albumList.length;
-    let searchTracks = albumList.slice(offset, 20);
     
-    do {
+    // Tant qu'il y a des albums à récupérer
+    while (offset < total) {
+      // Récupérer les prochains albums à partir de la pagination
+      const searchTracks = albumList.slice(offset, offset + 20);
+      
+      // Effectuer une requête pour obtenir les détails des albums
       const response = await axios.get(
-        `https://api.spotify.com/v1/albums?ids=${searchTracks}&limit=20&offset=${offset}`,
+        `https://api.spotify.com/v1/albums?ids=${searchTracks.join(",")}&limit=20`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -117,30 +123,54 @@ async function searchAlbumTracks(albumList: any) {
       );
       
       const albums = response.data.albums;
-      const filteredTracks = albums.flatMap((album: any) => album.tracks.items.filter((track: any) => {
-        // Filtrer les pistes qui correspondent à votre condition
-        if (track.artists.length > 1) {
-          return true; // Conserver les pistes avec plus d'un artiste
-        } else {
-          // Vérifier si l'ID de l'artiste correspond à artistsNameId
-          return track.artists.some((artist: any) => artist.id === artistsNameId);
-        }
-      }));
 
-      allTracks.push(...filteredTracks);
+      // Parcourir les albums pour récupérer les pistes et ajouter la propriété albumImage
+      const filteredTracks = albums.flatMap((album: any) => {
+        const albumImage = album.images.length > 0 ? album.images[0].url : null;
+        return album.tracks.items.map((track: any) => ({
+          ...track,
+          albumImage: albumImage
+        }));
+      }).filter((track: any) => {
+        // Filtrer les pistes en fonction des conditions spécifiées
+        return track.artists.some((artist: any) => artist.id === ID);
+      });
+
+      // Ajouter les pistes filtrées à la liste des pistes
+      tracks.push(...filteredTracks);
       
+      // Incrémenter l'offset pour la prochaine pagination
       offset += 20;
-      
+    }
 
-    } while (offset < total);
-
+    // Regrouper les pistes par artiste dans un objet
+    for (const track of tracks) {
+      for (const artist of track.artists) {
+        const artistId = artist.id;
+        const artistName = artist.name;
+        if (artistId !== ID) {
+          // Vérifier si la piste existe déjà dans l'objet allTracks
+          const existingTrack = allTracks[artistName]?.find((t: any) => t.name === track.name);
+          if (!existingTrack) {
+            // Si la piste n'existe pas encore, l'ajouter à l'objet allTracks
+            if (!allTracks[artistName]) {
+              allTracks[artistName] = [];
+            }
+            allTracks[artistName].push(track);
+          }
+        }
+      }
+    }
     
+    console.log(allTracks);
+    // Mettre à jour le state avec les pistes regroupées par artiste
+    setAllTracksByArtist(allTracks);
     
-    console.log(allTracks.map(track => track.name))
   } catch (error) {
     console.error(error);
   }
 }
+
 
 
 
@@ -240,14 +270,14 @@ async function searchAlbumTracks(albumList: any) {
         artistsName={artistsName}
       />
      
-      {/* {artistsOption.length > 0 && (
+       {artistsOption.length > 0 && (
         <ArtistSelection artistsOption={artistsOption} setSearchInput={setSearchInput} search={search}/>
-      )} */}
-      {Object.keys(tracksFeat).map((artistName, id) => (
+      )} 
+      {Object.keys(allTracksByArtist).map((artistName, id) => (
         <div key={id}>
           <Section
             setIsPlaying={setIsPlaying}
-            tracks={tracksFeat[artistName]}
+            tracks={allTracksByArtist[artistName]}
             isPlaying={isPlaying}
             setMusicUrl={setMusicUrl}
             artist={artistName}

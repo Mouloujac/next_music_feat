@@ -18,7 +18,7 @@ export default function Card ({ track, setMusicUrl, setAudioUrl, setIsPlaying, i
         <>
         <div className="card py-3 w-full flex m-auto px-3">
             <div className="albumDiv relative w-14 hover:cursor-pointer" onClick={handleAlbumDivClick}>
-            <img className="w-14 z-10 absolute" src={track.album.images[0].url}></img>
+            <img className="w-14 z-10 absolute" src={track.albumImage}></img>
             <img className="playButton w-14 absolute opacity-0 hover:opacity-1 z-50 transition-all"  src="play.svg">
             </img>
             </div>
@@ -26,7 +26,7 @@ export default function Card ({ track, setMusicUrl, setAudioUrl, setIsPlaying, i
                 <div className="trackName ml-5 mt-1 flex flex-col justify-start items-start">
                     <p>
                         {track.artists.map((artist: any, index: Key | null | undefined) => (
-                            <a key={index} href={artist.external_urls.spotify} target="_blank" className="hover:underline">{artist.name}, </a>
+                            <a key={index} href={artist.external_urls.spotify} target="_blank" className="hover:underline text-gray-400 ">{artist.name}, </a>
                         ))}
                     </p>
                     <p><a href={track.external_urls.spotify} target="_blank" className="text-gray-300 hover:underline">{track.name}</a></p>
